@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vanta Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --accent: #6c63ff;
+      --accent2: #3f8cff;
+      --bg: #050507;
+      --surface: #0d0d12;
+      --surface2: #13131a;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f8;
+      --muted: #8888a8;
+      --glow: rgba(108,99,255,0.35);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      width: 10px; height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 99999;
+      transition: transform 0.15s ease, background 0.2s;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(108,99,255,0.6);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 99998;
+      transition: transform 0.35s cubic-bezier(.16,1,.3,1), opacity 0.2s;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed;
+      top: 0; width: 100%;
+      padding: 16px 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5,5,7,0.75);
+      backdrop-filter: blur(18px);
+      z-index: 1000;
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s;
+    }
+    header.scrolled { padding: 10px 6%; }
+
+    .logo {
+      display: flex; align-items: center; gap: 11px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.45rem; font-weight: 800;
+      color: white; text-decoration: none; letter-spacing: -0.5px;
+    }
+    .logo img {
+      width: 42px; height: 42px;
+      object-fit: contain; border-radius: 12px;
+    }
+    .logo span { color: var(--accent); }
+
+    nav { display: flex; align-items: center; gap: 6px; }
+    nav a {
+      padding: 8px 16px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.9rem; font-weight: 500;
+      border-radius: 8px;
+      transition: color 0.25s, background 0.25s;
+      position: relative;
+    }
+    nav a:hover, nav a.active {
+      color: white;
+      background: rgba(108,99,255,0.12);
+    }
+    nav a.active::after {
+      content: '';
+      position: absolute;
+      bottom: 5px; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px;
+      background: var(--accent); border-radius: 50%;
+    }
+
+    /* ── PAGE SYSTEM ── */
+    .page {
+      min-height: 100vh;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s cubic-bezier(.16,1,.3,1), transform 0.5s cubic-bezier(.16,1,.3,1);
+    }
+    .page.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .page.entering { opacity: 0; transform: translateY(20px); }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9000; opacity: 0.4;
+    }
+
+    /* ── HERO ── */
+    #inicio {
+      padding: 0;
+      min-height: 100vh;
+      position: relative;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(108,99,255,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(63,140,255,0.1) 0%, transparent 50%),
+        var(--bg);
+    }
+
+
+
+    .hero-content {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 0 6%;
+      max-width: 1000px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 100px;
+      font-size: 0.8rem; color: #a8a0ff;
+      margin-bottom: 28px;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--accent); border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s 0.1s ease both;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #a8a0ff, #3f8cff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      max-width: 620px;
+      margin: 0 auto 36px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1.05rem;
+      animation: fadeInUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; flex-wrap: wrap;
+      animation: fadeInUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 30px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; font-weight: 600; font-size: 0.95rem;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+      box-shadow: 0 0 30px rgba(108,99,255,0.4);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 40px rgba(108,99,255,0.55);
+    }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 28px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: white; font-weight: 500; font-size: 0.95rem;
+      text-decoration: none; cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s;
+    }
+    .btn-ghost:hover {
+      border-color: rgba(108,99,255,0.4);
+      background: rgba(108,99,255,0.08);
+      transform: translateY(-3px);
+    }
+
+
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SHARED PAGE LAYOUT ── */
+    .page-inner {
+      flex: 1;
+      padding: 120px 8% 80px;
+    }
+
+    .page-header {
+      max-width: 700px;
+      margin: 0 auto 72px;
+      text-align: center;
+    }
+
+    .page-tag {
+      display: inline-block;
+      padding: 5px 14px;
+      background: rgba(108,99,255,0.1);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      color: #a8a0ff;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+
+    .page-sub {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+
+    /* ── NOSOTROS ── */
+    .about-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto 80px;
+    }
+
+    .about-text p {
+      color: var(--muted);
+      line-height: 1.9;
+      margin-bottom: 20px;
+      font-size: 1rem;
+    }
+
+    .about-pills {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px;
+    }
+    .pill {
+      padding: 7px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.82rem; color: var(--muted);
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .pill:hover { border-color: var(--accent); color: white; }
+
+    .about-visual {
+      position: relative;
+    }
+    .about-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .about-card-label {
+      font-size: 0.75rem; color: var(--muted); letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 12px;
+    }
+    .about-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .about-card p { color: var(--muted); line-height: 1.7; font-size: 0.95rem; }
+
+    /* CEO Box */
+    .ceo-section {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .ceo-box {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 48px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .ceo-box::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(108,99,255,0.12), transparent 60%);
+    }
+    .ceo-avatar {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+    }
+    .ceo-role {
+      font-size: 0.75rem; color: var(--accent);
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .ceo-box h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .ceo-box p { color: var(--muted); line-height: 1.8; position: relative; }
+
+    /* ── SERVICIOS ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: transform 0.4s cubic-bezier(.16,1,.3,1), border-color 0.3s, box-shadow 0.4s;
+      position: relative;
+      overflow: hidden;
+      group: true;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .service-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(108,99,255,0.3);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(108,99,255,0.1);
+    }
+    .service-card:hover::before { opacity: 1; }
+
+    .service-icon {
+      width: 48px; height: 48px;
+      background: rgba(108,99,255,0.1);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .service-card:hover .service-icon {
+      background: rgba(108,99,255,0.2);
+      transform: scale(1.1) rotate(-5deg);
+    }
+
+    .service-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .service-card p {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.92rem;
+      margin-bottom: 24px;
+    }
+
+    .service-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px;
+      background: rgba(108,99,255,0.1);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 10px;
+      color: #a8a0ff; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s;
+    }
+    .service-btn:hover {
+      background: rgba(108,99,255,0.2);
+      border-color: rgba(108,99,255,0.5);
+      color: white;
+      transform: translateX(3px);
+    }
+    .service-btn svg { transition: transform 0.25s; }
+    .service-btn:hover svg { transform: translateX(3px); }
+
+    /* ── ANIMATED BACKGROUND ── */
+    #bg-canvas {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      opacity: 0.55;
+    }
+    .page, header, footer { position: relative; z-index: 1; }
+
+    /* ── EQUIPO ── */
+    .team-grid {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      max-width: 1060px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+
+    .team-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 28px 30px;
+      text-align: center;
+      width: 260px;
+      flex-shrink: 0;
+      transition: transform 0.4s cubic-bezier(.16,1,.3,1), border-color 0.3s, box-shadow 0.4s;
+      position: relative;
+      overflow: hidden;
+    }
+    .team-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(108,99,255,0.1), transparent 60%);
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .team-card:hover { transform: translateY(-8px); border-color: rgba(108,99,255,0.35); box-shadow: 0 24px 50px rgba(0,0,0,0.4); }
+    .team-card:hover::before { opacity: 1; }
+
+    /* CEO card is larger and centered */
+    .team-card.ceo {
+      width: 300px;
+      padding: 40px 32px 34px;
+      border-color: rgba(108,99,255,0.2);
+      order: 2;
+    }
+    .team-card:not(.ceo):first-child { order: 1; }
+    .team-card:not(.ceo):last-child  { order: 3; }
+
+    .team-avatar-wrap {
+      position: relative;
+      width: 110px; height: 110px;
+      margin: 0 auto 20px;
+    }
+    .team-card.ceo .team-avatar-wrap {
+      width: 130px; height: 130px;
+    }
+    .team-avatar-wrap::before {
+      content: '';
+      position: absolute; inset: -3px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      z-index: 0;
+      animation: spinBorder 7s linear infinite;
+    }
+    .team-card.ceo .team-avatar-wrap::before {
+      inset: -4px;
+      background: linear-gradient(135deg, #a8a0ff, var(--accent), var(--accent2), #a8a0ff);
+    }
+    @keyframes spinBorder {
+      from { filter: hue-rotate(0deg); }
+      to   { filter: hue-rotate(360deg); }
+    }
+
+    .team-avatar {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      position: relative; z-index: 1;
+      overflow: hidden;
+      border: 3px solid var(--bg);
+      background: var(--surface2);
+    }
+    .team-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      transition: transform 0.5s cubic-bezier(.16,1,.3,1);
+    }
+    .team-card:hover .team-avatar img { transform: scale(1.07); }
+
+    .team-role {
+      font-size: 0.72rem; color: var(--accent);
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    .team-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem; font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .team-card.ceo h3 { font-size: 1.3rem; }
+    .team-card p { color: var(--muted); font-size: 0.86rem; line-height: 1.7; }
+
+    /* ── EMPLEOS ── */
+    .form-wrapper {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 52px;
+      position: relative;
+      overflow: hidden;
+    }
+    .form-wrapper::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    form { display: grid; gap: 18px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 7px; }
+    .form-group label {
+      font-size: 0.8rem; color: var(--muted);
+      letter-spacing: 0.5px; font-weight: 500;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: white;
+      font-size: 0.95rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(108,99,255,0.5);
+      background: rgba(108,99,255,0.05);
+    }
+    input::placeholder, textarea::placeholder { color: #444458; }
+    select option { background: #13131a; }
+    textarea { min-height: 140px; resize: vertical; }
+
+    .submit-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      font-size: 0.95rem; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+      box-shadow: 0 4px 24px rgba(108,99,255,0.3);
+      margin-top: 6px;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 36px rgba(108,99,255,0.5);
+    }
+    .submit-btn.loading { opacity: 0.7; pointer-events: none; }
+
+    /* ── CONTACTO ── */
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 60px;
+      align-items: start;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .contact-info h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .contact-info p { color: var(--muted); line-height: 1.8; margin-bottom: 32px; }
+
+    .contact-items { display: flex; flex-direction: column; gap: 16px; }
+    .contact-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .contact-item-icon {
+      width: 38px; height: 38px;
+      background: rgba(108,99,255,0.1);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .contact-item-text p:first-child {
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .contact-item-text p:last-child { font-size: 0.9rem; font-weight: 500; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 30px; right: 30px;
+      padding: 14px 22px;
+      background: var(--surface);
+      border: 1px solid rgba(108,99,255,0.4);
+      border-radius: 14px;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(.16,1,.3,1), opacity 0.3s;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 1.2rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 8%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem; font-weight: 800;
+    }
+    .footer-logo span { color: var(--accent); }
+    footer p { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { display: none; }
+      .about-layout, .contact-layout, .form-row { grid-template-columns: 1fr; }
+      .hero-stats { gap: 28px; }
+      .page-inner { padding: 100px 6% 60px; }
+      .form-wrapper { padding: 32px 24px; }
+      footer { flex-direction: column; text-align: center; }
+    }
+
+    /* ── MOBILE NAV ── */
+    .mobile-nav-toggle {
+      display: none;
+      flex-direction: column; gap: 5px;
+      cursor: pointer; padding: 8px;
+    }
+    .mobile-nav-toggle span {
+      width: 24px; height: 2px; background: white;
+      border-radius: 2px; transition: 0.3s;
+    }
+    @media (max-width: 768px) {
+      .mobile-nav-toggle { display: flex; }
+    }
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5,5,7,0.97);
+      z-index: 999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem; font-weight: 800;
+      color: white; text-decoration: none;
+      transition: color 0.25s;
+    }
+    .mobile-nav a:hover { color: var(--accent); }
+    .mobile-nav-close {
+      position: absolute; top: 20px; right: 24px;
+      font-size: 2rem; cursor: pointer; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Animated BG -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon">✓</span>
+  <span id="toast-msg">Mensaje enviado exitosamente.</span>
+</div>
+
+<!-- Header -->
+<header id="header">
+  <a class="logo" onclick="showPage('inicio')" style="cursor:none">
+    <img src="ChatGPT Image 13 may 2026, 02_13_46.png" alt="Vanta Studio Logo">
+    <div>Vanta <span>Studio</span></div>
+  </a>
+
+  <nav>
+    <a onclick="showPage('inicio')" data-page="inicio" class="active">Inicio</a>
+    <a onclick="showPage('nosotros')" data-page="nosotros">Nosotros</a>
+    <a onclick="showPage('servicios')" data-page="servicios">Servicios</a>
+    <a onclick="showPage('equipo')" data-page="equipo">Equipo</a>
+    <a onclick="showPage('empleos')" data-page="empleos">Empleos</a>
+    <a onclick="showPage('contacto')" data-page="contacto">Contacto</a>
+  </nav>
+
+  <button class="mobile-nav-toggle" id="menuToggle" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobileNav">
+  <span class="mobile-nav-close" onclick="closeMobileNav()">✕</span>
+  <a onclick="showPage('inicio'); closeMobileNav()">Inicio</a>
+  <a onclick="showPage('nosotros'); closeMobileNav()">Nosotros</a>
+  <a onclick="showPage('servicios'); closeMobileNav()">Servicios</a>
+  <a onclick="showPage('equipo'); closeMobileNav()">Equipo</a>
+  <a onclick="showPage('empleos'); closeMobileNav()">Empleos</a>
+  <a onclick="showPage('contacto'); closeMobileNav()">Contacto</a>
+</div>
+
+<!-- ═══════════ INICIO ═══════════ -->
+<div class="page active" id="inicio" style="min-height:100vh; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+  <div class="hero-bg"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Agencia de Marketing Digital
+    </div>
+    <h1>Impulsamos marcas en el <em>mundo digital.</em></h1>
+    <p>En Vanta Studio ayudamos negocios, emprendedores y empresas a crecer mediante estrategias modernas de marketing digital, diseño profesional, redes sociales, branding y desarrollo web.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="showPage('servicios')">
+        Explorar Servicios
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn-ghost" onclick="showPage('contacto')">Contáctanos</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ NOSOTROS ═══════════ -->
+<div class="page" id="nosotros">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-tag reveal">Quiénes Somos</div>
+      <h2 class="page-title reveal reveal-delay-1">Sobre <span style="color:var(--accent)">Nosotros</span></h2>
+      <p class="page-sub reveal reveal-delay-2">Vanta Studio es una agencia creativa especializada en marketing digital, diseño gráfico, branding y desarrollo web.</p>
+    </div>
+
+    <div class="about-layout">
+      <div class="about-text reveal">
+        <p>Vanta Studio es una agencia creativa especializada en marketing digital, creación de contenido, diseño gráfico, branding y desarrollo web. Nuestro objetivo es ayudar empresas a construir una presencia digital fuerte, moderna y profesional.</p>
+        <p>Trabajamos utilizando creatividad, tecnología y estrategias reales de crecimiento para ayudar marcas a destacar en redes sociales y plataformas digitales.</p>
+        <div class="about-pills">
+          <span class="pill">Marketing Digital</span>
+          <span class="pill">Diseño Gráfico</span>
+          <span class="pill">Branding</span>
+          <span class="pill">Desarrollo Web</span>
+          <span class="pill">Redes Sociales</span>
+          <span class="pill">Contenido Digital</span>
+        </div>
+      </div>
+      <div class="about-visual reveal reveal-delay-2">
+        <div class="about-card">
+          <div class="about-card-label">Nuestra misión</div>
+          <h3>Construimos presencias digitales que importan.</h3>
+          <p>Cada proyecto lo abordamos con la misma dedicación: crear algo que comunique, conecte y convierta.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ceo-section reveal">
+      <div class="ceo-box">
+        <div class="ceo-avatar">SR</div>
+        <div class="ceo-role">CEO & Fundador</div>
+        <h3>Steven Reyes Puello</h3>
+        <p>Fundador y CEO de Vanta Studio. Especializado en crecimiento digital, estrategias de marketing, branding y desarrollo creativo para negocios modernos.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Vanta <span>Studio</span></div>
+    <p>© 2026 Vanta Studio — CEO: Steven Reyes Puello</p>
+  </footer>
+</div>
+
+<!-- ═══════════ SERVICIOS ═══════════ -->
+<div class="page" id="servicios">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-tag reveal">Lo que ofrecemos</div>
+      <h2 class="page-title reveal reveal-delay-1">Nuestros <span style="color:var(--accent)">Servicios</span></h2>
+      <p class="page-sub reveal reveal-delay-2">Soluciones digitales profesionales diseñadas para aumentar la presencia, autoridad y ventas de tu negocio.</p>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-icon">📱</div>
+        <h3>Gestión de Redes Sociales</h3>
+        <p>Manejo profesional de Instagram, Facebook, TikTok y otras plataformas para aumentar alcance y engagement.</p>
+        <button class="service-btn" onclick="sendServiceRequest('Gestión de Redes Sociales')">
+          Solicitar Servicio
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div class="service-card reveal reveal-delay-2">
+        <div class="service-icon">🎨</div>
+        <h3>Diseño Gráfico</h3>
+        <p>Diseños modernos para publicaciones, banners, promociones, branding y contenido visual profesional.</p>
+        <button class="service-btn" onclick="sendServiceRequest('Diseño Gráfico')">
+          Solicitar Servicio
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div class="service-card reveal reveal-delay-3">
+        <div class="service-icon">💻</div>
+        <h3>Desarrollo Web</h3>
+        <p>Creación de páginas web modernas, rápidas y optimizadas para negocios y marcas digitales.</p>
+        <button class="service-btn" onclick="sendServiceRequest('Desarrollo Web')">
+          Solicitar Servicio
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div class="service-card reveal reveal-delay-4">
+        <div class="service-icon">📈</div>
+        <h3>Marketing Digital</h3>
+        <p>Estrategias de publicidad y crecimiento para aumentar clientes y ventas en plataformas digitales.</p>
+        <button class="service-btn" onclick="sendServiceRequest('Marketing Digital')">
+          Solicitar Servicio
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div class="service-card reveal reveal-delay-5">
+        <div class="service-icon">✦</div>
+        <h3>Branding</h3>
+        <p>Construimos identidades visuales fuertes y profesionales para empresas modernas.</p>
+        <button class="service-btn" onclick="sendServiceRequest('Branding')">
+          Solicitar Servicio
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-icon">🎬</div>
+        <h3>Edición de Video</h3>
+        <p>Creación de reels, anuncios y contenido visual dinámico para redes sociales.</p>
+        <button class="service-btn" onclick="sendServiceRequest('Edición de Video')">
+          Solicitar Servicio
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Vanta <span>Studio</span></div>
+    <p>© 2026 Vanta Studio — CEO: Steven Reyes Puello</p>
+  </footer>
+</div>
+
+<!-- ═══════════ EQUIPO ═══════════ -->
+<div class="page" id="equipo">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-tag reveal">Las personas detrás</div>
+      <h2 class="page-title reveal reveal-delay-1">Nuestro <span style="color:var(--accent)">Equipo</span></h2>
+      <p class="page-sub reveal reveal-delay-2">Personas creativas y comprometidas que hacen posible cada proyecto en Vanta Studio.</p>
+    </div>
+
+    <div class="team-grid">
+
+      <!-- RRHH (left) -->
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-avatar-wrap">
+          <div class="team-avatar">
+            <img src="eimy.png" alt="Recursos Humanos">
+          </div>
+        </div>
+        <div class="team-role">Recursos Humanos</div>
+        <h3>Responsable de RRHH</h3>
+        <p>Encargada del talento humano de Vanta Studio: selección, bienestar del equipo y cultura organizacional para construir un ambiente creativo y productivo.</p>
+      </div>
+
+      <!-- CEO (center, destacado) -->
+      <div class="team-card ceo reveal reveal-delay-2">
+        <div class="team-avatar-wrap">
+          <div class="team-avatar">
+            <img src="yo.png" alt="Steven Reyes Puello">
+          </div>
+        </div>
+        <div class="team-role">CEO & Fundador</div>
+        <h3>Steven Reyes Puello</h3>
+        <p>Fundador y CEO de Vanta Studio. Especializado en crecimiento digital, estrategias de marketing, branding y desarrollo creativo para negocios modernos.</p>
+      </div>
+
+      <!-- Gerente (right) -->
+      <div class="team-card reveal reveal-delay-3">
+        <div class="team-avatar-wrap">
+          <div class="team-avatar">
+            <img src="rusber.png" alt="Gerente General">
+          </div>
+        </div>
+        <div class="team-role">Gerente General</div>
+        <h3>Gerente de Operaciones</h3>
+        <p>Responsable de coordinar los equipos de trabajo, gestionar proyectos y garantizar que cada cliente reciba resultados de calidad en tiempo y forma.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Vanta <span>Studio</span></div>
+    <p>© 2026 Vanta Studio — CEO: Steven Reyes Puello</p>
+  </footer>
+</div>
+
+<!-- ═══════════ EMPLEOS ═══════════ -->
+<div class="page" id="empleos">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-tag reveal">Únete al equipo</div>
+      <h2 class="page-title reveal reveal-delay-1">Trabaja con <span style="color:var(--accent)">Nosotros</span></h2>
+      <p class="page-sub reveal reveal-delay-2">Buscamos personas creativas, responsables y apasionadas por el mundo digital. Completa la solicitud para formar parte de Vanta Studio.</p>
+    </div>
+
+    <div class="form-wrapper reveal">
+      <form onsubmit="sendJobApplication(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre completo</label>
+            <input type="text" name="Nombre" placeholder="Tu nombre" required>
+          </div>
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" name="Correo" placeholder="tu@correo.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>País o ciudad</label>
+          <input type="text" name="Pais" placeholder="¿Desde dónde trabajarías?" required>
+        </div>
+
+        <div class="form-group">
+          <label>Especialidad</label>
+          <select name="Especialidad" required>
+            <option value="">¿En qué te especializas?</option>
+            <option>Diseño Gráfico</option>
+            <option>Marketing Digital</option>
+            <option>Community Manager</option>
+            <option>Desarrollo Web</option>
+            <option>Edición de Video</option>
+            <option>Publicidad Digital</option>
+            <option>Creación de Contenido</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Experiencia y motivación</label>
+          <textarea name="Experiencia" placeholder="Cuéntanos sobre tu experiencia, habilidades y por qué quieres trabajar con Vanta Studio"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          Enviar Solicitud
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Vanta <span>Studio</span></div>
+    <p>© 2026 Vanta Studio — CEO: Steven Reyes Puello</p>
+  </footer>
+</div>
+
+<!-- ═══════════ CONTACTO ═══════════ -->
+<div class="page" id="contacto">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-tag reveal">Hablemos</div>
+      <h2 class="page-title reveal reveal-delay-1">Ponte en <span style="color:var(--accent)">Contacto</span></h2>
+      <p class="page-sub reveal reveal-delay-2">¿Quieres impulsar tu negocio? Escríbenos y te responderemos a la brevedad.</p>
+    </div>
+
+    <div class="contact-layout">
+      <div class="contact-info reveal">
+        <h3>¿Listo para crecer?</h3>
+        <p>En Vanta Studio estamos listos para ayudarte a construir o potenciar tu presencia digital. Cuéntanos tu proyecto.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <div class="contact-item-icon">✉️</div>
+            <div class="contact-item-text">
+              <p>Email</p>
+              <p>stevenpuello829@gmail.com</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">🌐</div>
+            <div class="contact-item-text">
+              <p>Plataformas</p>
+              <p>Instagram · Facebook · TikTok</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            <div class="contact-item-text">
+              <p>Operación</p>
+              <p>Digital — Internacional</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-wrapper reveal reveal-delay-2" style="background:var(--surface);">
+        <form onsubmit="sendContact(event)">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" name="Nombre" placeholder="Tu nombre" required>
+          </div>
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" name="Correo" placeholder="tu@correo.com" required>
+          </div>
+          <div class="form-group">
+            <label>Mensaje</label>
+            <textarea name="Mensaje" placeholder="Cuéntanos sobre tu proyecto o consulta..."></textarea>
+          </div>
+          <button type="submit" class="submit-btn">
+            Enviar Mensaje
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Vanta <span>Studio</span></div>
+    <p>© 2026 Vanta Studio — CEO: Steven Reyes Puello</p>
+  </footer>
+</div>
+
+<script>
+  // ── EmailJS Init ──────────────────────────
+  (function() {
+    emailjs.init("-5LkDkZ17PygTqFeU");
+  })();
+
+  // ── Custom Cursor ─────────────────────────
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursor.style.left = mouseX - 5 + 'px';
+    cursor.style.top = mouseY - 5 + 'px';
+  });
+
+  (function animateRing() {
+    ringX += (mouseX - ringX - 18) * 0.12;
+    ringY += (mouseY - ringY - 18) * 0.12;
+    ring.style.left = ringX + 'px';
+    ring.style.top = ringY + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+
+  document.querySelectorAll('a, button, .service-card, .team-card, input, textarea, select').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2)';
+      ring.style.transform = 'scale(1.5)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      ring.style.transform = 'scale(1)';
+    });
+  });
+
+  // ── Page Navigation ───────────────────────
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+
+    const target = document.getElementById(id);
+    target.style.display = 'flex';
+    target.classList.add('entering');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        target.classList.remove('entering');
+        target.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('nav a').forEach(a => {
+      a.classList.toggle('active', a.dataset.page === id);
+    });
+
+    triggerReveal();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Scroll header shrink ──────────────────
+  window.addEventListener('scroll', () => {
+    document.getElementById('header').classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // ── Reveal on scroll ─────────────────────
+  function triggerReveal() {
+    setTimeout(() => {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 60) el.classList.add('visible');
+      });
+    }, 50);
+  }
+  window.addEventListener('scroll', triggerReveal);
+
+
+
+  // ── Toast ─────────────────────────────────
+  function showToast(msg, success = true) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+    toastMsg.textContent = msg;
+    toast.querySelector('.toast-icon').textContent = success ? '✓' : '✕';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  // ── Email Functions ───────────────────────
+  function sendServiceRequest(service) {
+    const templateParams = {
+      service: service,
+      to_email: 'stevenpuello829@gmail.com'
+    };
+    emailjs.send('service_2hgjsyc', 'template_7g1dz35', templateParams)
+      .then(() => showToast('Solicitud enviada exitosamente!'),
+            err => showToast('Error al enviar: ' + err.text, false));
+  }
+
+  function sendJobApplication(event) {
+    event.preventDefault();
+    const form = event.target;
+    const btn = form.querySelector('.submit-btn');
+    btn.classList.add('loading');
+    btn.textContent = 'Enviando...';
+
+    const templateParams = {
+      from_name: form.querySelector('input[name="Nombre"]').value,
+      from_email: form.querySelector('input[name="Correo"]').value,
+      country: form.querySelector('input[name="Pais"]').value,
+      skill: form.querySelector('select[name="Especialidad"]').value,
+      experience: form.querySelector('textarea[name="Experiencia"]').value,
+      to_email: 'stevenpuello829@gmail.com'
+    };
+
+    emailjs.send('service_2hgjsyc', 'template_7g1dz35', templateParams)
+      .then(() => {
+        showToast('Solicitud enviada exitosamente!');
+        form.reset();
+      }, err => showToast('Error al enviar: ' + err.text, false))
+      .finally(() => {
+        btn.classList.remove('loading');
+        btn.innerHTML = 'Enviar Solicitud <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+      });
+  }
+
+  function sendContact(event) {
+    event.preventDefault();
+    const form = event.target;
+    const btn = form.querySelector('.submit-btn');
+    btn.classList.add('loading');
+    btn.textContent = 'Enviando...';
+
+    const templateParams = {
+      from_name: form.querySelector('input[name="Nombre"]').value,
+      from_email: form.querySelector('input[name="Correo"]').value,
+      message: form.querySelector('textarea[name="Mensaje"]').value,
+      to_email: 'stevenpuello829@gmail.com'
+    };
+
+    emailjs.send('service_2hgjsyc', 'template_7g1dz35', templateParams)
+      .then(() => {
+        showToast('Mensaje enviado exitosamente!');
+        form.reset();
+      }, err => showToast('Error al enviar: ' + err.text, false))
+      .finally(() => {
+        btn.classList.remove('loading');
+        btn.innerHTML = 'Enviar Mensaje <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+      });
+  }
+
+  // ── Mobile Nav ────────────────────────────
+  function toggleMobileNav() { document.getElementById('mobileNav').classList.toggle('open'); }
+  function closeMobileNav() { document.getElementById('mobileNav').classList.remove('open'); }
+
+  // ── Photo Upload ─────────────────────────
+  function loadTeamPhoto(input, imgId) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById(imgId);
+      img.src = e.target.result;
+      img.classList.add('loaded');
+      // hide hint
+      const hint = input.closest('.team-card').querySelector('.upload-hint');
+      if (hint) hint.style.opacity = '0';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Twinkling Stars Background ───────────
+  (function() {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Star types: tiny dim ones + a few brighter accent stars
+    const stars = [];
+    const STAR_COUNT = 90;
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const isBright = i < 14; // first 14 are brighter accent stars
+      stars.push({
+        x: Math.random(),
+        y: Math.random(),
+        baseR: isBright ? Math.random() * 1.2 + 0.8 : Math.random() * 0.7 + 0.2,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.008 + 0.003,
+        // bright stars get a blue-purple tint, dim ones are white
+        hue: isBright ? (Math.random() < 0.5 ? '168,160,255' : '120,180,255') : '220,220,255',
+        baseAlpha: isBright ? Math.random() * 0.5 + 0.4 : Math.random() * 0.25 + 0.08,
+        // occasional "flare" stars that spike bright
+        flare: isBright && Math.random() < 0.4,
+        flarePhase: Math.random() * Math.PI * 2,
+        flareSpeed: Math.random() * 0.004 + 0.001,
+      });
+    }
+
+    let t = 0;
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      t += 1;
+
+      stars.forEach(s => {
+        const twinkle = Math.sin(t * s.speed + s.phase);
+        const alpha = s.baseAlpha + twinkle * s.baseAlpha * 0.6;
+        let r = s.baseR + twinkle * s.baseR * 0.5;
+
+        // flare effect: occasional sharp brightness spike
+        if (s.flare) {
+          const flareVal = Math.sin(t * s.flareSpeed + s.flarePhase);
+          if (flareVal > 0.92) {
+            const intensity = (flareVal - 0.92) / 0.08;
+            r += intensity * 2.5;
+
+            // cross / lens flare lines
+            ctx.save();
+            ctx.globalAlpha = intensity * 0.35;
+            ctx.strokeStyle = `rgba(${s.hue},1)`;
+            ctx.lineWidth = 0.5;
+            const cx = s.x * W, cy = s.y * H;
+            const len = 10 + intensity * 14;
+            ctx.beginPath();
+            ctx.moveTo(cx - len, cy); ctx.lineTo(cx + len, cy);
+            ctx.moveTo(cx, cy - len); ctx.lineTo(cx, cy + len);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        // glow halo for brighter stars
+        if (r > 1.0) {
+          const glow = ctx.createRadialGradient(s.x*W, s.y*H, 0, s.x*W, s.y*H, r * 5);
+          glow.addColorStop(0, `rgba(${s.hue},${Math.min(alpha * 0.4, 0.3)})`);
+          glow.addColorStop(1, `rgba(${s.hue},0)`);
+          ctx.beginPath();
+          ctx.arc(s.x*W, s.y*H, r * 5, 0, Math.PI*2);
+          ctx.fillStyle = glow;
+          ctx.fill();
+        }
+
+        // star core
+        ctx.beginPath();
+        ctx.arc(s.x*W, s.y*H, Math.max(r, 0.1), 0, Math.PI*2);
+        ctx.fillStyle = `rgba(${s.hue},${Math.min(Math.max(alpha, 0), 1)})`;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ── Init ──────────────────────────────────
+  document.querySelectorAll('.page:not(.active)').forEach(p => p.style.display = 'none');
+  triggerReveal();
+</script>
+
+</body>
+</html>
